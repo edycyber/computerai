@@ -1,0 +1,129 @@
+<html><head><base href="https://mywebsite.com/ai_assistant/"><title>AI Assistant Chat</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  #chat-container {
+    width: 80%;
+    max-width: 600px;
+    height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #chat-messages {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: white;
+  }
+  #user-input {
+    display: flex;
+    padding: 10px;
+    background-color: #f0f0f0;
+  }
+  #message-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    margin-right: 10px;
+  }
+  #send-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 70%;
+  }
+  .user-message {
+    background-color: #DCF8C6;
+    align-self: flex-end;
+    margin-left: auto;
+  }
+  .ai-message {
+    background-color: #E8E8E8;
+    align-self: flex-start;
+  }
+</style>
+</head>
+<body>
+<div id="chat-container">
+  <div id="chat-messages"></div>
+  <div id="user-input">
+    <input type="text" id="message-input" placeholder="Type your message here...">
+    <button id="send-button">Send</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
+
+const API_KEY = '12345678910';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+function addMessage(content, isUser = false) {
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+  messageElement.classList.add(isUser ? 'user-message' : 'ai-message');
+  messageElement.textContent = content;
+  chatMessages.appendChild(messageElement);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function sendMessage() {
+  const userMessage = messageInput.value.trim();
+  if (userMessage) {
+    addMessage(userMessage, true);
+    messageInput.value = '';
+
+    try {
+      const response = await axios.post(API_URL, {
+        model: "meta-llama/llama-3.2-11b-vision-instruct:free",
+        messages: [{ role: "user", content: userMessage }]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const aiResponse = response.data.choices[0].message.content;
+      addMessage(aiResponse);
+    } catch (error) {
+      console.error('Error:', error);
+      addMessage('Sorry, I encountered an error. Please try again.');
+    }
+  }
+}
+
+sendButton.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+// Initial greeting
+addMessage('Hello! I\'m your AI assistant. How can I help you today?');
+</script>
+</body>
+</html>
